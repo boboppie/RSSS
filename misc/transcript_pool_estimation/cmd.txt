@@ -1,0 +1,77 @@
+module load bowtie/1.1.0
+module load samtools/1.1
+module load zlib
+module load armadillo
+module load boost
+module load gsl/1.16
+module load mmseq/1.0.8a
+
+# For human, we use Illumina Body Map liver tissue data, search "liver" in http://www.ebi.ac.uk/arrayexpress/files/E-MTAB-513/E-MTAB-513.sdrf.txt 
+
+wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR030/ERR030887/ERR030887_1.fastq.gz
+wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR030/ERR030887/ERR030887_2.fastq.gz
+wget ftp://ftp.ensembl.org/pub/release-66/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh37.66.cdna.all.fa.gz
+wget ftp://ftp.ensembl.org/pub/release-66/fasta/homo_sapiens/ncrna/Homo_sapiens.GRCh37.66.ncrna.fa.gz
+
+gunzip *.gz
+cat Homo_sapiens.GRCh37.66.ncrna.fa >> Homo_sapiens.GRCh37.66.cdna.all.fa
+fastagrep.sh -v 'supercontig|GRCh37:[^1-9XMY]' Homo_sapiens.GRCh37.66.cdna.all.fa > Homo_sapiens.GRCh37.66.ref_transcripts.fa
+mv Homo_sapiens.GRCh37.66.ref_transcripts.fa transcriptome.hap.orig.fa
+sed 's/\(>ENST.*\) cdna.*\(gene:.*\) gene.*/\1 \2/' transcriptome.hap.orig.fa > transcriptome.hap.fa
+grep '>' transcriptome.hap.fa  | sed -E 's/>//' | sed -E 's/gene://' > t2g.txt
+
+bowtie-build transcriptome.hap.fa transcriptome.hap
+bowtie -p 32 -a --best --strata --fullref --sam -m 100 -I 0 -X 500 transcriptome.hap -1 ERR030887_1.fastq -2 ERR030887_2.fastq | samtools view -bS - | samtools sort -n - bowtiealigned.sorted
+bam2hits -m "(\S+).*gene:(\S+).*" 1 2 transcriptome.hap.fa bowtiealigned.sorted.bam > bodymapliver.hits
+OMP_NUM_THREADS=6 mmseq bodymapliver.hits bodymapliver
+
+wget -O mmseq-latest.zip https://github.com/eturro/mmseq/archive/latest.zip
+unzip mmseq-latest.zip && cd mmseq-latest
+Rscript mmseq-bodymapliver.R #f_g=0.49, f_t=0.39
+
+#--------------------------------------------------
+# For mouse, we Sanger Mouse Genomes Project whole-brain RNA-seq - http://www.ebi.ac.uk/ena/data/view/SAMEA81199
+# http://www.sanger.ac.uk/resources/mouse/genomes/
+# http://www.ebi.ac.uk/ena/data/view/ERP000614&display=html
+
+wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR033/ERR033000/ERR033000_1.fastq.gz
+wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR033/ERR033000/ERR033000_2.fastq.gz
+wget ftp://ftp.ensembl.org/pub/release-66/fasta/mus_musculus/cdna/Mus_musculus.NCBIM37.66.cdna.all.fa.gz
+wget ftp://ftp.ensembl.org/pub/release-66/fasta/mus_musculus/ncrna/Mus_musculus.NCBIM37.66.ncrna.fa.gz
+
+gunzip *.gz
+cat Mus_musculus.NCBIM37.66.ncrna.fa >> Mus_musculus.NCBIM37.66.cdna.all.fa
+fastagrep.sh -v 'scaffold|PATCH' Mus_musculus.NCBIM37.66.cdna.all.fa > Mus_musculus.NCBIM37.66.ref_transcripts.fa
+mv Mus_musculus.NCBIM37.66.ref_transcripts.fa transcriptome.hap.orig.fa
+sed 's/\(>ENSM.*\) .* .* \(gene:.*\) gene.*/\1 \2/' transcriptome.hap.orig.fa > transcriptome.hap.fa
+grep '>' transcriptome.hap.fa  | sed -E 's/>//' | sed -E 's/gene://' > t2g.txt
+
+bowtie-build transcriptome.hap.fa transcriptome.hap
+bowtie -p 32 -a --best --strata --fullref --sam -m 100 -I 0 -X 500 transcriptome.hap -1 ERR033000_1.fastq -2 ERR033000_2.fastq | samtools view -bS - | samtools sort -n - bowtiealigned.sorted
+bam2hits -m "(\S+).*gene:(\S+).*" 1 2 transcriptome.hap.fa bowtiealigned.sorted.bam > mouse.hits
+OMP_NUM_THREADS=6 mmseq mouse.hits mouse 
+#f_g=0.64, f_t=0.61
+
+#--------------------------------------------------
+# For worm, we use RGASP paper suggested L3 stage larvae data
+# http://www.ncbi.nlm.nih.gov/sra/?term=srr065719
+# http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2990000/
+
+#wget ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByRun/sra/SRR/SRR065/SRR065719/SRR065719.sra
+wget http://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/2.4.2-1/sratoolkit.2.4.2-ubuntu64.tar.gz
+tar -zxvf sratoolkit.2.4.2-ubuntu64.tar.gz
+sratoolkit.2.4.2-ubuntu64/bin/fastq-dump -I --split-files SRR065719
+wget ftp://ftp.ensembl.org/pub/release-66/fasta/caenorhabditis_elegans/cdna/Caenorhabditis_elegans.WS220.66.cdna.all.fa.gz
+wget ftp://ftp.ensembl.org/pub/release-66/fasta/caenorhabditis_elegans/ncrna/Caenorhabditis_elegans.WS220.66.ncrna.fa.gz
+gunzip *.gz
+
+cat Caenorhabditis_elegans.WS220.66.ncrna.fa >> Caenorhabditis_elegans.WS220.66.cdna.all.fa
+mv Caenorhabditis_elegans.WS220.66.cdna.all.fa transcriptome.hap.orig.fa
+sed 's/\(>.*\) .* .* \(gene:.*\) gene.*/\1 \2/' transcriptome.hap.orig.fa > transcriptome.hap.fa
+grep '>' transcriptome.hap.fa  | sed -E 's/>//' | sed -E 's/gene://' > t2g.txt
+
+bowtie-build transcriptome.hap.fa transcriptome.hap
+bowtie -p 32 -a --best --strata --fullref --sam -m 100 -I 0 -X 500 transcriptome.hap -1 SRR065719_1.fastq -2 SRR065719_2.fastq | samtools view -bS - | samtools sort -n - bowtiealigned.sorted
+bam2hits -m "(\S+).*gene:(\S+).*" 1 2 transcriptome.hap.fa bowtiealigned.sorted.bam > worm.hits
+OMP_NUM_THREADS=6 mmseq worm.hits worm
+#f_g=0.4, f_t=0.86
