@@ -631,6 +631,20 @@ class PlotMmseqPrediction2(tp.NaivelyCachedComputation):
         self.correlation = R("cor(expr.truth, expr.mmseq)")[0]
         self.correlationTP = R("cor(expr.truth[mTranscriptTP], expr.mmseq[mTranscriptTP])")[0]
         self.logCorrelationTP = R("cor(log(expr.truth[mTranscriptTP & (expr.mmseq > 0)]), log(expr.mmseq[mTranscriptTP & (expr.mmseq > 0)]))")[0]
+
+        '''
+        # simple plot to visualize FP and TP expression levels
+        R.pdf("FP_TP.pdf")
+        R("""
+            par(mfrow=c(2,2))
+            plot(expr.mmseq[!mTranscriptTP])
+            plot(expr.mmseq[mTranscriptTP])
+            hist(expr.mmseq[!mTranscriptTP]) 
+            hist(expr.mmseq[mTranscriptTP])
+            dev.off()
+        """)
+        '''
+
         #self.meanFPExprFrac = R("mean(expr.mmseq[!mTranscriptTP]) / mean(expr.mmseq[mTranscriptTP])")[0]
         self.meanFPExprFrac = R("sum(expr.mmseq[!mTranscriptTP]) / sum(expr.mmseq[mTranscriptTP])")[0]
         # Plot true vs estimated

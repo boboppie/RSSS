@@ -65,8 +65,8 @@ if __name__ == '__main__':
     plotOaExpressionTP =  "%.2f" % (oasesRes.oaPlotMmseqPrediction.logCorrelationTP,) 
     plotAnExpressionFP = ["%.2f" % (r.plotMmseqPrediction.meanFPExprFrac,) for r in dRes.values()]
     plotRbExpressionFP = ["%.2f" % (r.plotClMmseqPrediction.meanFPExprFrac,) for r in dRes.values()]
-    plotClExpressionFP =  "%.2f" % (cuffRes.plotClMmseqPrediction.meanFPExprFrac,) 
-    plotOaExpressionFP =  "%.2f" % (oasesRes.oaPlotMmseqPrediction.meanFPExprFrac,)
+    plotClExpressionFP =  "%.2f" % (cuffRes.plotClMmseqPrediction.meanFPExprFrac,) # FP/TP ratio for Cufflinks at cov=1000
+    plotOaExpressionFP =  "%.2f" % (oasesRes.oaPlotMmseqPrediction.meanFPExprFrac,) # FP/TP ratio for Oases at cov=1000
 
     R = rpy2.robjects.r
     R.source(os.path.join(os.environ["RSSS_MMSEQ_DIR"], "mmseq.R"))
@@ -101,13 +101,11 @@ if __name__ == '__main__':
     R("""
         hist_clCorrectlyReconstructed <- hist(log(expr.mmseq[mTranscriptTP]), breaks=30)
         hist_clIncorrectlyReconstructed <- hist(log(expr.mmseq[!mTranscriptTP]), breaks=30)
-        pdf("_logExpHis2.pdf", width=6, height=10)
-        par(mfrow=c(2,1))
+        pdf("_logExpHis2.pdf", width=10, height=10)
         library(scales)
-        plot(hist_clCorrectlyReconstructed, main="Histograms of reconstructed transcripts", xlab="", col=alpha("royalblue", 0.5), xlim=c(2,10), ylim=c(0,60))
-        legend("topright", "Correctly reconstructed by Cufflinks", pch=c(22,22), col=alpha("royalblue", 0.5))
-        plot(hist_clIncorrectlyReconstructed, main="", xlab="Expression level on log scale", col=alpha("red", 0.5), xlim=c(2,10), ylim=c(0,60))
-        legend("topright", "Incorrectly reconstructed by Cufflinks", pch=c(22,22), col=alpha("red", 0.5))
+        plot(hist_clCorrectlyReconstructed, main="Estimated expression levels of reconstructed transcripts", xlab="", col=alpha("royalblue", 0.5), xlim=c(0,10), ylim=c(0,60))
+        plot(hist_clIncorrectlyReconstructed, main="", xlab="Expression level on log scale", col=alpha("red", 0.5), xlim=c(0,10), ylim=c(0,60), add=T)
+        legend("topright", c("Correctly reconstructed by Cufflinks", "Incorrectly reconstructed by Cufflinks"), pch=c(22,22), col=c(alpha("royalblue", 0.5), alpha("red", 0.5)))
         dev.off()
     """)
 
