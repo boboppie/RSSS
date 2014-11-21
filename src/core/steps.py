@@ -961,7 +961,7 @@ class TophatAlign(tp.NaivelyCachedComputation):
         #cmd = "tophat --no-novel-juncs -G '%(annotGTF)s' -o '%(tophatOut)s' '%(bowtieIndex)s' '%(reads1)s' '%(reads2)s'"
 
         # parameter setting suggested by RGASP, 50 for human as default
-        if organism is "warm":
+        if organism is "worm":
             cmd = "tophat -i 30 --min-coverage-intron 30 --min-segment-intron 30 -p %(nproc)d -o '%(tophatOut)s' '%(bowtieIndex)s' '%(reads1)s' '%(reads2)s'"
 
         if organism is "fly":
@@ -985,7 +985,7 @@ class Cufflinks(tp.NaivelyCachedComputation):
         cmd = "cufflinks -p %(nproc)d -o '%(clOut)s' %(RABTassembly)s '%(thAcceptedHits)s' -m %(insertSizeMean)s -s %(insertSizeSd)s"
 
         # parameter setting suggested by RGASP, 50 for human as default
-        if organism is "warm":
+        if organism is "worm":
             cmd = "cufflinks --min-intron-length 30 -p %(nproc)d -o '%(clOut)s' %(RABTassembly)s '%(thAcceptedHits)s' -m %(insertSizeMean)s -s %(insertSizeSd)s"
 
         if organism is "fly":
