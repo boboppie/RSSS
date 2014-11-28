@@ -1,0 +1,88 @@
+======================== worm =======================
+zcat Caenorhabditis_elegans.WS220.66.cdna.all.fa.gz | grep '>' | cut -f1,3,4 -d" " | cut -f1,3,7 -d":" | sed 's/chromosome://' | sed 's/:/ /' | sed 's/>//' | awk '{ print $2"\t"$3"\t"$1 }' > ~/tmp/worm.cdna.txt
+
+parallel -k 'g=$(grep -Pe "^{}\t" worm.cdna.txt | cut -f2 | sort | uniq | wc -l);t=$(grep -Pe "^{}\t" worm.cdna.txt | cut -f3 | sort | uniq | wc -l);echo {} $(bc -l <<< $t/$g)' ::: I II III IV V X > worm.iso
+
+I 1.51705622236260265319
+II 1.42763330706593117940
+III 1.55394190871369294605
+IV 1.47347158631834096417
+V 1.26671156760397373295
+X 1.40415486307837582625
+
+======================== mouse =======================
+zcat ~/data/RSSS/ensembl_mouse/release-66/fasta/mus_musculus/cdna/Mus_musculus.NCBIM37.66.cdna.all.fa.gz | grep '>' | cut -f1,3,4 -d" " | cut -f1,3,7 -d":" | sed 's/chromosome://' | sed 's/:/ /' | sed 's/>//' | awk '{ print $2"\t"$3"\t"$1 }' > ~/tmp/mouse.cdna.txt
+
+parallel -k 'g=$(grep -Pe "^{}\t" mouse.cdna.txt | cut -f2 | sort | uniq | wc -l);t=$(grep -Pe "^{}\t" mouse.cdna.txt | cut -f3 | sort | uniq | wc -l);echo {} $(bc -l <<< $t/$g)' ::: $(seq 1 19) X Y > mouse.iso
+
+1 3.07026675341574495770
+2 3.20215194000652103032
+3 3.11351351351351351351
+4 2.98034398034398034398
+5 3.47490820073439412484
+6 2.95779816513761467889
+7 2.84825967931169339069
+8 2.87363494539781591263
+9 2.88160676532769556025
+10 2.95730706075533661740
+11 3.25776031434184675834
+12 2.37336024217961654894
+13 2.36028751123090745732
+14 2.20100502512562814070
+15 3.03333333333333333333
+16 3.40995260663507109004
+17 3.00427960057061340941
+18 2.72136752136752136752
+19 2.82899628252788104089
+X 2.10719131614654002713
+Y 2.27777777777777777777
+
+======================== human =======================
+zcat ~/data/RSSS/ensembl_human/release-66/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh37.66.cdna.all.fa.gz | grep '>' | cut -f1,3,4 -d" " | cut -f1,3,7 -d":" | sed 's/chromosome://' | sed 's/:/ /' | sed 's/>//' | awk '{ print $2"\t"$3"\t"$1 }' > ~/tmp/human.cdna.txt
+
+parallel -k 'g=$(grep -Pe "^{}\t" human.cdna.txt | cut -f2 | sort | uniq | wc -l);t=$(grep -Pe "^{}\t" human.cdna.txt | cut -f3 | sort | uniq | wc -l);echo {} $(bc -l <<< $t/$g)' ::: $(seq 1 22) X Y > human.iso
+
+1 3.88842688842688842688
+2 4.09211775878442545109
+3 4.64528301886792452830
+4 3.60167405219103889709
+5 3.79875333926981300089
+6 3.42533162173727000427
+7 3.96509598603839441535
+8 3.91047120418848167539
+9 3.14651279478173607626
+10 3.45544013121924548933
+11 4.40887595489268825027
+12 4.78996999571367338191
+13 2.78018575851393188854
+14 4.01272827891532927504
+15 4.33746130030959752321
+16 4.56590788777130757014
+17 3.20863309352517985611
+18 2.93530997304582210242
+19 3.02981514609421586165
+20 3.61918328584995251661
+21 3.43069306930693069306
+22 4.15399422521655437921
+X 3.00105932203389830508
+Y 1.48098434004474272930
+
+cat human.iso mouse.iso worm.iso > all.iso
+
+########### R code #############
+all <- read.table("~/Downloads/all.iso", quote="\"")
+pdf("2b.pdf", width = 10, height = 8 )
+library(scales)
+par(mar = c(5,4,4,2) + 0.1, cex=1.2)
+plot(all$V2, ylim=c(0,5), type="n", xaxt = "n", xlab='Chromsome', ylab='Isoforms / gene')
+rect(-1, -1, 24.5, 6, border = NA, col = alpha("royalblue", 0.2))
+rect(24.5, -1, 45.5, 6, border = NA, col = alpha("red2", 0.2))
+rect(45.5, -1, 55, 6, border = NA, col = alpha("gold", 0.2))
+abline(v = 24.5, col = "gray50", lty =2)
+abline(v = 45.5, col = "gray50", lty =2) 
+points(all$V2, cex = .8, pch = 20)
+text(12, 0.5, "Human")
+text(35, 0.5, "Mouse")
+text(49, 0.5, "Worm")
+axis(1, at=1:length(all$V2), labels=all$V1)
+dev.off()
