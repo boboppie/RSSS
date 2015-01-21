@@ -9,7 +9,7 @@ Three principal approaches have been proposed for inferring the set of transcrip
 
 ## Citing
 
-A manuscript has been submitted to *Briefings in Bioinformatics* for peer reviewing.
+A manuscript has been submitted to *Briefings in Bioinformatics* for peer review.
 
 ## Obtaining
 
@@ -30,7 +30,7 @@ tree.  Currently, the tree is hosted on github, and can be obtained via:
 RSSS is made by:
 
 - Fengyuan Hu 
-- J\"urgen J\"anes 
+- Jürgen Jänes 
 - Ernest Turro 
 - Alexandra Lewin 
 
