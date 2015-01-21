@@ -30,7 +30,7 @@ unzip mmseq-latest.zip && cd mmseq-latest
 Rscript mmseq-bodymapliver.R #f_g=0.49, f_t=0.39
 
 #--------------------------------------------------
-# For mouse, we Sanger Mouse Genomes Project whole-brain RNA-seq - http://www.ebi.ac.uk/ena/data/view/SAMEA81199
+# For mouse, we use Sanger Mouse Genomes Project whole-brain RNA-seq
 # http://www.sanger.ac.uk/resources/mouse/genomes/
 # http://www.ebi.ac.uk/ena/data/view/ERP000614&display=html
 

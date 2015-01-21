@@ -67,22 +67,23 @@ parallel -k 'g=$(grep -Pe "^{}\t" human.cdna.txt | cut -f2 | sort | uniq | wc -l
 X 3.00105932203389830508
 Y 1.48098434004474272930
 
-cat human.iso mouse.iso worm.iso > all.iso
+cat humaniso.tsv mouseiso.tsv wormiso.tsv > alliso.tsv
 
 ########### R code #############
-all <- read.table("~/Downloads/all.iso", quote="\"")
-pdf("2b.pdf", width = 10, height = 8 )
 library(scales)
-par(mar = c(5,4,4,2) + 0.1, cex=1.2)
-plot(all$V2, ylim=c(0,5), type="n", xaxt = "n", xlab='Chromsome', ylab='Mean no. of isoforms per gene')
+all <- read.table("alliso.csv", quote="\"")
+pdf("fig5.pdf", width = 14, height = 8)
+par(mar = c(5,4,2,2) + 0.1, cex=1.2)
+plot(all$V2, ylim=c(0,5), type="n", xaxt = "n", xlab='Chromsome', ylab='Mean no. of isoforms per gene', cex.lab=1.3)
 rect(-1, -1, 24.5, 6, border = NA, col = alpha("royalblue", 0.2))
 rect(24.5, -1, 45.5, 6, border = NA, col = alpha("red2", 0.2))
 rect(45.5, -1, 55, 6, border = NA, col = alpha("gold", 0.2))
 abline(v = 24.5, col = "gray50", lty =2)
 abline(v = 45.5, col = "gray50", lty =2) 
-points(all$V2, cex = .8, pch = 20)
-text(12, 0.5, "Human")
-text(35, 0.5, "Mouse")
-text(49, 0.5, "Worm")
-axis(1, at=1:length(all$V2), labels=all$V1)
+points(all$V2, pch = 20, cex = 1.4)
+text(12, 0.5, "Human", cex=1.3)
+text(35, 0.5, "Mouse", cex=1.3)
+text(49, 0.5, "Worm", cex=1.3)
+axis(1, at=seq(1, length(all$V2), 2), labels=all$V1[seq(1, length(all$V2), 2)], tcl=-0.2, mgp=c(3, .3, 0), cex.axis=1)
+axis(1, at=seq(2, length(all$V2), 2), labels=all$V1[seq(2, length(all$V2), 2)], tcl=-1, mgp=c(3, 1, 0), cex.axis=1)
 dev.off()
