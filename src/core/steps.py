@@ -441,7 +441,8 @@ class SimulatedReads(tp.NaivelyCachedComputation):
         
         tot = 0.0
         effective_len_vec = []
-        for transcript in l_transcript:
+        for i, transcript in enumerate(l_transcript):
+            if v: print (i+1, len(l_transcript))
             expression = d_expression.get(transcript.id)
             # fragment (a.k.a insert) is from normal distribution
             effective_len = sum(map(lambda x: (sps.norm.cdf(x + 0.5, loc=insert_size_mean, scale=insert_size_sd) - sps.norm.cdf(x - 0.5, loc=insert_size_mean, scale=insert_size_sd)) * (len(transcript) - x + 1), range(1, len(transcript))))
@@ -1231,6 +1232,37 @@ class Oases(tp.NaivelyCachedComputation):
                       "fas": self.fpShuffledFa,
                       "fpOut": self.fp("")
                       })
+
+class Trinity(tp.NaivelyCachedComputation):
+    """
+        Reconstruct transcripts with Trinity, "pre-github"-versions.
+            http://sourceforge.net/projects/trinityrnaseq/files/PREV_CONTENTS/previous_releases/
+
+        Assumes Trinity binaries are in the RSSS_TRINITY_DIR environmental variable.
+    """
+    def compute(self, simulatedReads):
+        trinity_bin = os.path.join(os.environ['RSSS_TRINITY_DIR'], 'Trinity')
+        assert os.path.isfile(trinity_bin), 'Trinity binary not found (should be set in RSSS_TRINITY_DIR).'
+        cpu = nproc()
+        mem = 4 # TODO: change to ~20 for production
+        reads1 = simulatedReads.fpReads1
+        reads2 = simulatedReads.fpReads2
+        output = self.fp("trinity_out")        
+        # cmd_old is for "sourceforge vesions" (pre-2015)
+        # cmd_new is for "github versions" (2.0 or above), and isn't properly tested at this point
+        cmd_old = "%(trinity_bin)s --seqType fq --left %(reads1)s --right %(reads2)s --CPU %(cpu)d --JM %(mem)sG --SS_lib_type FR --output %(output)s"
+        #cmd_new = "%(trinity_bin)s --seqType fq --left %(reads1)s --right %(reads2)s --CPU %(cpu)d --max_memory %(mem)sG --SS_lib_type FR"
+        tp.run(cmd_old % locals())
+        
+        def copy_p(src,dst):
+            # Copy file from src to dst, creating directories when necessary
+            dst_dirname = os.path.dirname(dst)
+            if not os.path.exists(dst_dirname): os.makedirs(dst_dirname)
+            shutil.copy(src, dst)
+
+        # Pretend this is Oases such that we can use OasesTranscriptome to evaluate the reconstructions
+        # (Yes, this is confusing and should be changed)
+        copy_p(self.fp("trinity_out/Trinity.fasta"), self.fp('Merged/transcripts.fa'))
 
 class OasesTranscriptome(tp.NaivelyCachedComputation):
     def compute(self, oases, transcriptPool):
