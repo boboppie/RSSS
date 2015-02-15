@@ -40,3 +40,7 @@ class pipelineCoverage():
       #self.oaHitsfile = Hitsfile(bowtieAlign=self.oaBowtieAlign,simulatedTranscriptome=self.oasesTranscriptome,enstFormat=False)#,recompute=True)
       #self.oaMmseqExpr = Mmseq(hitsfile=self.oaHitsfile)#,recompute=True)
       #self.oaPlotMmseqPrediction = PlotMmseqPrediction2(simulatedTranscriptome=self.oasesTranscriptome,mmseqExpr=self.oaMmseqExpr)#,recompute=True)
+      
+      ## Trinity
+      self.trinity = Trinity(simulatedReads = self.simulatedReads)
+      self.trinityTranscriptome = OasesTranscriptome(oases=trinity, transcriptPool=self.transcriptPool)#, recompute=True)
